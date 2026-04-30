@@ -5,7 +5,7 @@ const serviceManager = require('./service-manager');
 function createWindow() {
     const win = new BrowserWindow({
         width: 740,
-        height: 560,
+        height: 565,
         frame: false, // Custom frame for that premium look
         transparent: true,
         webPreferences: {
