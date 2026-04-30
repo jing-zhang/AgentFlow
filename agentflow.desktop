@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=AgentFlow
+Comment=Monitor and control AI agents (OpenClaw and Hermes)
+Exec=/opt/agentflow/agentflow.sh
+Icon=application-x-executable
+Categories=Utility;System;
+Terminal=false
+StartupNotify=true

@@ -16,18 +16,31 @@
 
 ## 📦 Installation
 
-### Option 1: Debian Package (Ubuntu/Debian)
+### Option 1: Debian Package (Ubuntu/Debian) - Recommended
 
 ```bash
-sudo dpkg -i agent-flow_1.0.0_amd64.deb
+sudo dpkg -i dist/agent-flow_1.0.0_amd64.deb
 agentflow
 ```
 
-### Option 2: AppImage (Universal Linux)
+### Option 2: AppImage with Launcher Script
 
 ```bash
-chmod +x AgentFlow-1.0.0.AppImage
-./AgentFlow-1.0.0.AppImage --no-sandbox
+chmod +x agentflow.sh
+./agentflow.sh
+```
+
+Or install system-wide:
+```bash
+sudo bash install.sh
+# Then launch from application menu or run: /opt/agentflow/agentflow.sh
+```
+
+### Option 3: AppImage (Universal Linux)
+
+```bash
+chmod +x dist/AgentFlow-1.0.0.AppImage
+./dist/AgentFlow-1.0.0.AppImage --no-sandbox
 ```
 
 Or use the provided launcher script:
@@ -35,7 +48,7 @@ Or use the provided launcher script:
 ./dist/agentflow
 ```
 
-### Option 3: From Source
+### Option 4: From Source
 
 1. **Clone the repository**:
    ```bash
