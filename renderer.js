@@ -10,24 +10,29 @@ async function updateStatus(serviceName) {
     if (status === 'active') {
         ring.classList.add('active');
         text.innerText = 'ACTIVE';
+        text.style.fontSize = '0.75rem';
         info.innerText = 'Running smoothly | Uptime: Healthy';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
     } else if (status === 'not-installed') {
         ring.classList.add('inactive');
-        text.innerText = 'NOT INSTALLED';
-        info.innerText = `Service not found. Please install the ${serviceName}-gateway service.`;
+        text.innerText = 'NOT\nINSTALLED';
+        text.style.fontSize = '0.6rem';
+        text.style.lineHeight = '1.1';
+        info.innerText = `Install ${serviceName}-gateway service`;
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
     } else if (status === 'error') {
         ring.classList.add('inactive');
         text.innerText = 'ERROR';
+        text.style.fontSize = '0.75rem';
         info.innerText = 'Failed to check service status';
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
     } else {
         ring.classList.add('inactive');
         text.innerText = 'STOPPED';
+        text.style.fontSize = '0.75rem';
         info.innerText = 'Service is currently offline';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
