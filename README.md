@@ -27,7 +27,12 @@ agentflow
 
 ```bash
 chmod +x AgentFlow-1.0.0.AppImage
-./AgentFlow-1.0.0.AppImage
+./AgentFlow-1.0.0.AppImage --no-sandbox
+```
+
+Or use the provided launcher script:
+```bash
+./dist/agentflow
 ```
 
 ### Option 3: From Source
@@ -96,11 +101,23 @@ systemctl --user status hermes-gateway
 
 ## 🖥 Troubleshooting
 
+### AppImage Issues
+
+**FUSE Error**: `dlopen(): error loading libfuse.so.2`
+```bash
+sudo apt-get install libfuse2
+```
+
+**Sandbox Error**: `The SUID sandbox helper binary was not configured correctly`
+- Run with `--no-sandbox` flag: `./AgentFlow-1.0.0.AppImage --no-sandbox`
+- Or use the launcher script: `./dist/agentflow`
+- Or install the .deb package instead (recommended)
+
 ### Sandbox Errors
-If you encounter SUID sandbox errors on Linux, AgentFlow is pre-configured with the `--no-sandbox` flag in `package.json` to bypass these restrictions.
+If you encounter SUID sandbox errors on Linux, use the `--no-sandbox` flag or install the .deb package which handles this automatically.
 
 ### GPU / VSync Errors
-For better stability on Ubuntu, the app runs with the `--disable-gpu` flag.
+For better stability on Ubuntu, the app runs with the `--disable-gpu` flag by default.
 
 ### Services Not Detected
 Verify that your services exist:
@@ -112,6 +129,7 @@ systemctl --user list-units --type=service | grep gateway
 - Ensure systemd is running: `systemctl --user status`
 - Check that you have the required dependencies installed
 - Try running from source: `npm install && npm start`
+- For AppImage, try with `--no-sandbox` flag
 
 ## 🏗️ Building Packages
 

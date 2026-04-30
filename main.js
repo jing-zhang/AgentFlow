@@ -11,6 +11,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
+            sandbox: false, // Disable sandbox for AppImage compatibility
             preload: path.join(__dirname, 'preload.js')
         }
     });
