@@ -12,7 +12,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
 
 ## Phase 1: Bug Exploration
 
-- [ ] 1. Write bug condition exploration test
+- [x] 1. Write bug condition exploration test
   - **Property 1: Bug Condition** - Service Commands Use Incorrect Names and Syntax
   - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
   - **DO NOT attempt to fix the test or the code when it fails**
@@ -40,7 +40,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
 
 ## Phase 2: Preservation Testing
 
-- [ ] 2. Write preservation property tests (BEFORE implementing fix)
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
   - **Property 2: Preservation** - Non-Service-Command Behavior Unchanged
   - **IMPORTANT**: Follow observation-first methodology
   - Observe behavior on UNFIXED code for non-buggy inputs:
@@ -127,7 +127,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
 
 ## Phase 4: Validation
 
-- [ ] 4. Verify bug condition exploration test now passes
+- [x] 4. Verify bug condition exploration test now passes
   - **Property 1: Expected Behavior** - Service Commands Use Correct Names and Syntax
   - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
   - The test from task 1 encodes the expected behavior
@@ -138,7 +138,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
   - Verify that commands execute successfully without sudo
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 5. Verify preservation tests still pass
+- [x] 5. Verify preservation tests still pass
   - **Property 2: Preservation** - Non-Service-Command Behavior Unchanged
   - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
   - Run preservation property tests from step 2
@@ -151,7 +151,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
 
 ## Phase 5: End-to-End Testing
 
-- [ ] 6. Write and run unit tests for service control functions
+- [x] 6. Write and run unit tests for service control functions
   - Test service name mapping function with valid and invalid service names
   - Test `getStatus()` with correct service names and `systemctl --user` syntax
   - Test `controlService()` with correct service names and `systemctl --user` syntax
@@ -161,7 +161,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
   - Verify all unit tests pass
   - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 7. Write and run property-based tests for service control
+- [x] 7. Write and run property-based tests for service control
   - Generate random service names and verify only valid names are accepted
   - Generate random actions (start, stop, restart) and verify correct systemctl syntax is used
   - Generate random service states and verify status polling returns consistent results
@@ -170,7 +170,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
   - Verify all property-based tests pass
   - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 8. Run integration tests for full service control flow
+- [x] 8. Run integration tests for full service control flow
   - Test full flow: app starts → initial status check → polling loop → user clicks button → service control → UI updates
   - Test service control in each context: start service → verify status changes → stop service → verify status changes
   - Test error scenarios: attempt to control non-existent service → verify error is displayed → verify UI remains responsive
@@ -179,7 +179,7 @@ This task list implements the bugfix for AgentFlow service control issues. The w
   - Verify all integration tests pass
   - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 9. Checkpoint - Ensure all tests pass and app functions correctly
+- [x] 9. Checkpoint - Ensure all tests pass and app functions correctly
   - Run full test suite (unit, property-based, and integration tests)
   - Verify all tests pass
   - Manually test the app:

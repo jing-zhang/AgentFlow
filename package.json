@@ -15,7 +15,9 @@
     "build": "electron-builder",
     "build:linux": "electron-builder --linux",
     "build:deb": "electron-builder --linux deb",
-    "build:appimage": "electron-builder --linux AppImage"
+    "build:appimage": "electron-builder --linux AppImage",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "build": {
     "appId": "com.agentflow.app",
@@ -49,6 +51,7 @@
   },
   "devDependencies": {
     "electron": "^41.3.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "jest": "^30.3.0"
   }
 }
