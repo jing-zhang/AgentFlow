@@ -4,6 +4,7 @@ async function updateStatus(serviceName) {
     const text = document.getElementById(`status-${serviceName}`);
     const info = document.getElementById(`info-${serviceName}`);
     const buttons = document.querySelectorAll(`#card-${serviceName} .action-btn`);
+    const logButton = document.getElementById(`${serviceName}-log-btn`);
 
     ring.classList.remove('active', 'inactive');
     
@@ -14,6 +15,7 @@ async function updateStatus(serviceName) {
         info.innerText = 'Running smoothly | Uptime: Healthy';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
+        if (logButton) logButton.disabled = false;
     } else if (status === 'not-installed') {
         ring.classList.add('inactive');
         text.innerText = 'NOT\nINSTALLED';
@@ -22,6 +24,7 @@ async function updateStatus(serviceName) {
         info.innerText = `Install ${serviceName}-gateway service`;
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
+        if (logButton) logButton.disabled = true;
     } else if (status === 'error') {
         ring.classList.add('inactive');
         text.innerText = 'ERROR';
@@ -29,6 +32,7 @@ async function updateStatus(serviceName) {
         info.innerText = 'Failed to check service status';
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
+        if (logButton) logButton.disabled = true;
     } else {
         ring.classList.add('inactive');
         text.innerText = 'STOPPED';
@@ -36,6 +40,7 @@ async function updateStatus(serviceName) {
         info.innerText = 'Service is currently offline';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
+        if (logButton) logButton.disabled = false;
     }
 }
 
@@ -103,6 +108,15 @@ function switchTab(tabName) {
 // Logs functionality
 function refreshLogs(serviceName) {
     const logArea = document.getElementById(`${serviceName}-logs`);
+    const logButton = document.getElementById(`${serviceName}-log-btn`);
+    
+    // Check if service is installed
+    const status = document.getElementById(`status-${serviceName}`);
+    if (status && status.innerText.includes('NOT')) {
+        alert(`Cannot fetch logs: ${serviceName}-gateway is not installed.`);
+        return;
+    }
+    
     logArea.value = 'Loading logs...\n';
     
     // Simulate fetching logs (in a real app, this would call the backend)
