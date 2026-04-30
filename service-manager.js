@@ -43,7 +43,7 @@ class ServiceManager {
                         } else if (error && error.code === 4) {
                             // Exit code 4 means service not found
                             console.error(`Service not found: ${mappedName}`);
-                            resolve('error');
+                            resolve('not-installed');
                         } else {
                             // Other errors
                             console.error(`Error checking status: ${stderr || error?.message}`);

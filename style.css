@@ -208,6 +208,17 @@ body {
 .action-btn.stop:hover { color: var(--status-inactive); }
 .action-btn.restart:hover { color: var(--accent-blue); }
 
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.action-btn:disabled:hover {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-primary);
+}
+
 /* Activity Monitor */
 .activity-monitor {
     background: var(--card-bg);

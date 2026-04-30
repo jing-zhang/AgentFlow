@@ -3,6 +3,7 @@ async function updateStatus(serviceName) {
     const ring = document.getElementById(`ring-${serviceName}`);
     const text = document.getElementById(`status-${serviceName}`);
     const info = document.getElementById(`info-${serviceName}`);
+    const buttons = document.querySelectorAll(`#card-${serviceName} .action-btn`);
 
     ring.classList.remove('active', 'inactive');
     
@@ -10,20 +11,39 @@ async function updateStatus(serviceName) {
         ring.classList.add('active');
         text.innerText = 'ACTIVE';
         info.innerText = 'Running smoothly | Uptime: Healthy';
+        // Enable buttons
+        buttons.forEach(btn => btn.disabled = false);
+    } else if (status === 'not-installed') {
+        ring.classList.add('inactive');
+        text.innerText = 'NOT INSTALLED';
+        info.innerText = `Service not found. Please install the ${serviceName}-gateway service.`;
+        // Disable buttons
+        buttons.forEach(btn => btn.disabled = true);
     } else if (status === 'error') {
         ring.classList.add('inactive');
         text.innerText = 'ERROR';
         info.innerText = 'Failed to check service status';
+        // Disable buttons
+        buttons.forEach(btn => btn.disabled = true);
     } else {
         ring.classList.add('inactive');
         text.innerText = 'STOPPED';
         info.innerText = 'Service is currently offline';
+        // Enable buttons
+        buttons.forEach(btn => btn.disabled = false);
     }
 }
 
 async function control(serviceName, action) {
     const info = document.getElementById(`info-${serviceName}`);
     const text = document.getElementById(`status-${serviceName}`);
+    const buttons = document.querySelectorAll(`#card-${serviceName} .action-btn`);
+    
+    // Check if service is installed
+    if (text.innerText === 'NOT INSTALLED') {
+        alert(`Cannot ${action} service: ${serviceName}-gateway is not installed.`);
+        return;
+    }
     
     info.innerText = `Executing ${action}...`;
     text.innerText = 'PENDING';
