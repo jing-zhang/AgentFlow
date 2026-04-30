@@ -1,0 +1,54 @@
+{
+  "name": "agent-flow",
+  "version": "1.0.0",
+  "description": "Monitor and control AI agents (OpenClaw and Hermes) directly from your Ubuntu desktop",
+  "author": {
+    "name": "AgentFlow Team",
+    "email": "support@agentflow.local"
+  },
+  "license": "MIT",
+  "main": "main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron . --no-sandbox --disable-gpu",
+    "dev": "electron . --no-sandbox --disable-gpu",
+    "build": "electron-builder",
+    "build:linux": "electron-builder --linux",
+    "build:deb": "electron-builder --linux deb",
+    "build:appimage": "electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.agentflow.app",
+    "productName": "AgentFlow",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "service-manager.js",
+      "index.html",
+      "style.css",
+      "node_modules/**/*"
+    ],
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Utility"
+    },
+    "deb": {
+      "depends": [
+        "gconf2",
+        "gconf-service",
+        "libappindicator1",
+        "libnotify4",
+        "libxtst6",
+        "libnss3"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^41.3.0",
+    "electron-builder": "^24.13.3"
+  }
+}

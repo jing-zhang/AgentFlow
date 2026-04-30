@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentFlow</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="title-bar">
+            <div class="app-title">AgentFlow <span class="version">v1.0</span></div>
+            <div class="window-controls">
+                <button onclick="window.electronAPI.windowControl('minimize')" class="control-btn minimize"></button>
+                <button onclick="window.electronAPI.windowControl('maximize')" class="control-btn maximize"></button>
+                <button onclick="window.electronAPI.windowControl('close')" class="control-btn close"></button>
+            </div>
+        </header>
+
+        <nav class="main-nav">
+            <button class="nav-item active" onclick="switchTab('overview')">Overview</button>
+            <button class="nav-item" onclick="switchTab('logs')">Logs</button>
+            <button class="nav-item" onclick="switchTab('settings')">Settings</button>
+        </nav>
+
+        <main class="dashboard" id="tab-overview">
+            <div class="cards-container">
+                <!-- OpenClaw Agent Card -->
+                <div class="card" id="card-openclaw">
+                    <div class="card-header">
+                        <h2>OpenClaw Agent</h2>
+                    </div>
+                    <div class="status-container">
+                        <div class="status-ring" id="ring-openclaw">
+                            <span class="status-text" id="status-openclaw">CHECKING...</span>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <p id="info-openclaw">Checking system status...</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn start" onclick="control('openclaw', 'start')">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Start
+                        </button>
+                        <button class="action-btn stop" onclick="control('openclaw', 'stop')">
+                            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg> Stop
+                        </button>
+                        <button class="action-btn restart" onclick="control('openclaw', 'restart')">
+                            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Restart
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hermes Agent Card -->
+                <div class="card" id="card-hermes">
+                    <div class="card-header">
+                        <h2>Hermes Agent</h2>
+                    </div>
+                    <div class="status-container">
+                        <div class="status-ring" id="ring-hermes">
+                            <span class="status-text" id="status-hermes">CHECKING...</span>
+                        </div>
+                    </div>
+                    <div class="card-info">
+                        <p id="info-hermes">Checking system status...</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn start" onclick="control('hermes', 'start')">
+                            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Start
+                        </button>
+                        <button class="action-btn stop" onclick="control('hermes', 'stop')">
+                            <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg> Stop
+                        </button>
+                        <button class="action-btn restart" onclick="control('hermes', 'restart')">
+                            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Restart
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <section class="activity-monitor">
+                <h3>Activity Monitor</h3>
+                <div class="chart-placeholder">
+                    <div class="bar" style="height: 40%"></div>
+                    <div class="bar" style="height: 60%"></div>
+                    <div class="bar" style="height: 35%"></div>
+                    <div class="bar" style="height: 80%"></div>
+                    <div class="bar" style="height: 55%"></div>
+                    <div class="bar" style="height: 70%"></div>
+                    <div class="bar" style="height: 90%"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Logs Tab -->
+        <main class="dashboard" id="tab-logs" style="display: none;">
+            <section class="logs-container">
+                <h3>Service Logs</h3>
+                <div class="logs-content">
+                    <div class="log-section">
+                        <h4>OpenClaw Gateway</h4>
+                        <textarea id="openclaw-logs" readonly class="log-viewer"></textarea>
+                        <button class="action-btn" onclick="refreshLogs('openclaw')">Refresh Logs</button>
+                    </div>
+                    <div class="log-section">
+                        <h4>Hermes Gateway</h4>
+                        <textarea id="hermes-logs" readonly class="log-viewer"></textarea>
+                        <button class="action-btn" onclick="refreshLogs('hermes')">Refresh Logs</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Settings Tab -->
+        <main class="dashboard" id="tab-settings" style="display: none;">
+            <section class="settings-container">
+                <h3>Settings</h3>
+                <div class="settings-content">
+                    <div class="setting-item">
+                        <label>OpenClaw Service Name:</label>
+                        <input type="text" id="openclaw-service" value="openclaw-gateway" class="setting-input">
+                    </div>
+                    <div class="setting-item">
+                        <label>Hermes Service Name:</label>
+                        <input type="text" id="hermes-service" value="hermes-gateway" class="setting-input">
+                    </div>
+                    <div class="setting-item">
+                        <label>Status Poll Interval (seconds):</label>
+                        <input type="number" id="poll-interval" value="10" min="5" max="60" class="setting-input">
+                    </div>
+                    <button class="action-btn" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="status-bar">
+            <span class="system-check">Systems Check: <span class="ok">OK</span></span>
+            <span class="user-info">alex@ubuntu-hub</span>
+        </footer>
+    </div>
+    <script src="renderer.js"></script>
+</body>
+</html>
