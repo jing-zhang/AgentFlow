@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Build output
@@ -41,6 +40,4 @@ pids/
 # Spec files (optional - remove if you want to track them)
 # .kiro/specs/
 
-# Generated files
-create-icon.js
-create-icon-proper.js
+# Generated files (placeholder removed; create-icon-proper.js is source code)

@@ -10,8 +10,8 @@
   "main": "main.js",
   "homepage": "./",
   "scripts": {
-    "start": "electron . --no-sandbox --disable-gpu",
-    "dev": "electron . --no-sandbox --disable-gpu",
+    "start": "electron .",
+    "dev": "electron .",
     "build": "electron-builder",
     "build:linux": "electron-builder --linux",
     "build:deb": "electron-builder --linux deb",

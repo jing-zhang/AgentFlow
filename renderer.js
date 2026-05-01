@@ -1,3 +1,10 @@
+// Guard: ensure electronAPI is available
+if (!window.electronAPI) {
+    console.error('electronAPI not available — preload script may have failed to load');
+    document.body.innerHTML = '<div style="padding:2rem;text-align:center;color:#fff"><h2>AgentFlow failed to initialize</h2><p>The preload script did not load correctly. Try restarting the application.</p></div>';
+    throw new Error('electronAPI not available');
+}
+
 async function updateStatus(serviceName) {
     const status = await window.electronAPI.getStatus(serviceName);
     const ring = document.getElementById(`ring-${serviceName}`);
@@ -102,12 +109,20 @@ function updatePollInterval(newInterval) {
     }, pollInterval);
 }
 
-// Randomize chart bars for visual effect
-function updateChart() {
+// Update chart bars based on real service status
+async function updateChart() {
     const bars = document.querySelectorAll('.bar');
-    bars.forEach(bar => {
-        const height = Math.floor(Math.random() * 70) + 20;
+    const statuses = await Promise.all(
+        SERVICE_IDENTIFIERS.map(s => window.electronAPI.getStatus(s))
+    );
+    bars.forEach((bar, i) => {
+        const idx = i % SERVICE_IDENTIFIERS.length;
+        const active = statuses[idx] === 'active';
+        const height = active ? Math.floor(Math.random() * 30) + 60 : Math.floor(Math.random() * 15) + 5;
         bar.style.height = `${height}%`;
+        bar.style.background = active
+            ? `linear-gradient(to top, #00e676, #00c853)`
+            : `linear-gradient(to top, #ff5252, #d32f2f)`;
     });
 }
 
