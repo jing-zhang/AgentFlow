@@ -15,7 +15,10 @@ async function updateStatus(serviceName) {
         info.innerText = 'Running smoothly | Uptime: Healthy';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
-        if (logButton) logButton.disabled = false;
+        if (logButton) {
+            logButton.disabled = false;
+            logButton.textContent = 'Refresh Logs';
+        }
     } else if (status === 'not-installed') {
         ring.classList.add('inactive');
         text.innerText = 'NOT\nINSTALLED';
@@ -24,7 +27,10 @@ async function updateStatus(serviceName) {
         info.innerText = `Install ${serviceName}-gateway service`;
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
-        if (logButton) logButton.disabled = true;
+        if (logButton) {
+            logButton.disabled = true;
+            logButton.textContent = 'Refresh Logs';
+        }
     } else if (status === 'error') {
         ring.classList.add('inactive');
         text.innerText = 'ERROR';
@@ -32,7 +38,10 @@ async function updateStatus(serviceName) {
         info.innerText = 'Failed to check service status';
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
-        if (logButton) logButton.disabled = true;
+        if (logButton) {
+            logButton.disabled = true;
+            logButton.textContent = 'Refresh Logs';
+        }
     } else {
         ring.classList.add('inactive');
         text.innerText = 'STOPPED';
@@ -40,7 +49,10 @@ async function updateStatus(serviceName) {
         info.innerText = 'Service is currently offline';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
-        if (logButton) logButton.disabled = false;
+        if (logButton) {
+            logButton.disabled = false;
+            logButton.textContent = 'Refresh Logs';
+        }
     }
 }
 
@@ -106,7 +118,7 @@ function switchTab(tabName) {
 }
 
 // Logs functionality
-function refreshLogs(serviceName) {
+async function refreshLogs(serviceName) {
     const logArea = document.getElementById(`${serviceName}-logs`);
     const logButton = document.getElementById(`${serviceName}-log-btn`);
     
@@ -118,16 +130,23 @@ function refreshLogs(serviceName) {
     }
     
     logArea.value = 'Loading logs...\n';
+    logButton.disabled = true;
+    logButton.textContent = 'Loading...';
     
-    // Simulate fetching logs (in a real app, this would call the backend)
-    setTimeout(() => {
-        logArea.value = `Recent logs for ${serviceName}:\n\n`;
-        logArea.value += `[2026-04-30 10:15:23] Service started\n`;
-        logArea.value += `[2026-04-30 10:15:24] Initializing connections\n`;
-        logArea.value += `[2026-04-30 10:15:25] Ready to accept requests\n`;
-        logArea.value += `[2026-04-30 10:20:15] Processing request #1\n`;
-        logArea.value += `[2026-04-30 10:20:16] Request completed successfully\n`;
-    }, 500);
+    try {
+        const result = await window.electronAPI.getLogs(serviceName, 50);
+        
+        if (result.success === false) {
+            logArea.value = `Error fetching logs:\n${result.error}\n\nMake sure the service is installed and journalctl is available.`;
+        } else {
+            logArea.value = result.logs;
+        }
+    } catch (error) {
+        logArea.value = `Error fetching logs:\n${error.message}\n\nMake sure the service is installed and journalctl is available.`;
+    } finally {
+        logButton.disabled = false;
+        logButton.textContent = 'Refresh Logs';
+    }
 }
 
 // Settings functionality

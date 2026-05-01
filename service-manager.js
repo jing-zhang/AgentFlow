@@ -85,6 +85,51 @@ class ServiceManager {
         }
         return { success: false };
     }
+
+    /**
+     * Get recent logs for a service using journalctl
+     * @param {string} serviceName - The service identifier
+     * @param {number} lines - Number of log lines to fetch (default: 50)
+     * @returns {Promise<string>} The log output
+     */
+    async getLogs(serviceName, lines = 50) {
+        if (this.platform === 'linux') {
+            return new Promise((resolve, reject) => {
+                try {
+                    const mappedName = this.mapServiceName(serviceName);
+                    // Use journalctl to fetch logs for user-level services
+                    // --user: user-level services
+                    // -u: unit name
+                    // -n: number of lines
+                    // --no-pager: don't use a pager
+                    // -o: output format (short-precise includes timestamp)
+                    const command = `journalctl --user -u ${mappedName} -n ${lines} --no-pager -o short-precise`;
+                    exec(command, (error, stdout, stderr) => {
+                        if (error) {
+                            // If service doesn't exist or has no logs, return empty string
+                            if (error.code === 1) {
+                                resolve(`No logs found for ${mappedName}\n\nTry starting the service first.`);
+                            } else {
+                                console.error(`Error fetching logs: ${stderr || error.message}`);
+                                reject(new Error(`Failed to fetch logs for ${serviceName}: ${stderr || error.message}`));
+                            }
+                        } else {
+                            const output = stdout.trim();
+                            if (output) {
+                                resolve(output);
+                            } else {
+                                resolve(`No recent logs for ${mappedName}\n\nService may be stopped or has no recent activity.`);
+                            }
+                        }
+                    });
+                } catch (error) {
+                    console.error(`Error mapping service name: ${error.message}`);
+                    reject(error);
+                }
+            });
+        }
+        return `Log fetching not supported on ${this.platform}`;
+    }
 }
 
 module.exports = new ServiceManager();

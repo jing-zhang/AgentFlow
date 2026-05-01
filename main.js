@@ -39,6 +39,15 @@ ipcMain.handle('control-service', async (event, { serviceName, action }) => {
     }
 });
 
+ipcMain.handle('get-logs', async (event, { serviceName, lines }) => {
+    try {
+        const logs = await serviceManager.getLogs(serviceName, lines);
+        return { success: true, logs };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
 // Window controls
 ipcMain.on('window-control', (event, action) => {
     const win = BrowserWindow.getFocusedWindow();
