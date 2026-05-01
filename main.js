@@ -11,7 +11,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: false, // Disable sandbox for AppImage compatibility
+            sandbox: true, // Enable sandbox for security (default)
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -43,6 +43,24 @@ ipcMain.handle('get-logs', async (event, { serviceName, lines }) => {
     try {
         const logs = await serviceManager.getLogs(serviceName, lines);
         return { success: true, logs };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('update-service-mapping', async (event, newMapping) => {
+    try {
+        serviceManager.updateServiceMapping(newMapping);
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('get-service-mapping', async (event) => {
+    try {
+        const mapping = serviceManager.getServiceMapping();
+        return { success: true, mapping };
     } catch (error) {
         return { success: false, error: error.message };
     }

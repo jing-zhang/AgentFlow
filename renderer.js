@@ -81,13 +81,26 @@ async function control(serviceName, action) {
     setTimeout(() => updateStatus(serviceName), 1000);
 }
 
+// Service identifiers (these are fixed identifiers, not the actual service names)
+const SERVICE_IDENTIFIERS = ['openclaw', 'hermes'];
+
 // Initial check
-['openclaw', 'hermes'].forEach(updateStatus);
+SERVICE_IDENTIFIERS.forEach(updateStatus);
 
 // Poll for status updates every 10 seconds
-setInterval(() => {
-    ['openclaw', 'hermes'].forEach(updateStatus);
-}, 10000);
+let pollInterval = 10000; // Default 10 seconds
+let pollIntervalId = setInterval(() => {
+    SERVICE_IDENTIFIERS.forEach(updateStatus);
+}, pollInterval);
+
+// Function to update polling interval
+function updatePollInterval(newInterval) {
+    clearInterval(pollIntervalId);
+    pollInterval = newInterval * 1000; // Convert seconds to milliseconds
+    pollIntervalId = setInterval(() => {
+        SERVICE_IDENTIFIERS.forEach(updateStatus);
+    }, pollInterval);
+}
 
 // Randomize chart bars for visual effect
 function updateChart() {
@@ -103,7 +116,7 @@ updateChart();
 
 
 // Tab switching
-function switchTab(tabName) {
+function switchTab(tabName, event) {
     // Hide all tabs
     document.getElementById('tab-overview').style.display = 'none';
     document.getElementById('tab-logs').style.display = 'none';
@@ -114,7 +127,9 @@ function switchTab(tabName) {
     
     // Update nav buttons
     document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 }
 
 // Logs functionality
@@ -150,7 +165,7 @@ async function refreshLogs(serviceName) {
 }
 
 // Settings functionality
-function saveSettings() {
+async function saveSettings() {
     const openclawService = document.getElementById('openclaw-service').value;
     const hermesService = document.getElementById('hermes-service').value;
     const pollInterval = document.getElementById('poll-interval').value;
@@ -160,11 +175,28 @@ function saveSettings() {
     localStorage.setItem('hermes-service', hermesService);
     localStorage.setItem('poll-interval', pollInterval);
     
-    alert('Settings saved successfully!');
+    // Update service mapping in service manager
+    try {
+        const newMapping = {
+            'openclaw': openclawService,
+            'hermes': hermesService
+        };
+        const result = await window.electronAPI.updateServiceMapping(newMapping);
+        
+        if (result.success) {
+            // Update polling interval
+            updatePollInterval(parseInt(pollInterval, 10));
+            alert('Settings saved successfully! Service mapping updated.');
+        } else {
+            alert(`Failed to update service mapping: ${result.error}`);
+        }
+    } catch (error) {
+        alert(`Error updating service mapping: ${error.message}`);
+    }
 }
 
 // Load settings on startup
-function loadSettings() {
+async function loadSettings() {
     const openclawService = localStorage.getItem('openclaw-service') || 'openclaw-gateway';
     const hermesService = localStorage.getItem('hermes-service') || 'hermes-gateway';
     const pollInterval = localStorage.getItem('poll-interval') || '10';
@@ -172,6 +204,26 @@ function loadSettings() {
     document.getElementById('openclaw-service').value = openclawService;
     document.getElementById('hermes-service').value = hermesService;
     document.getElementById('poll-interval').value = pollInterval;
+    
+    // Update service mapping in service manager
+    try {
+        const newMapping = {
+            'openclaw': openclawService,
+            'hermes': hermesService
+        };
+        const result = await window.electronAPI.updateServiceMapping(newMapping);
+        
+        if (result.success) {
+            console.log('Service mapping updated on startup');
+        } else {
+            console.error(`Failed to update service mapping: ${result.error}`);
+        }
+    } catch (error) {
+        console.error(`Error updating service mapping: ${error.message}`);
+    }
+    
+    // Update polling interval
+    updatePollInterval(parseInt(pollInterval, 10));
 }
 
 // Load settings when app starts

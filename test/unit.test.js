@@ -1,178 +1,212 @@
 /**
  * Unit Tests - AgentFlow Service Control
  * 
- * Tests for individual functions and components
+ * Tests for individual functions and components using proper module imports
  */
 
+// Mock child_process.exec before importing service-manager
+jest.mock('child_process', () => ({
+    exec: jest.fn()
+}));
+
 const { exec } = require('child_process');
-const { promisify } = require('util');
-const execAsync = promisify(exec);
-const fs = require('fs');
+const ServiceManager = require('../service-manager');
 
 describe('Unit Tests: Service Control Functions', () => {
+    let serviceManager;
+    
+    beforeEach(() => {
+        // Get the singleton instance
+        serviceManager = require('../service-manager');
+        jest.clearAllMocks();
+    });
     
     /**
      * Test 1: Service name mapping with valid names
      */
     test('Service name mapping accepts valid service names', () => {
-        const serviceNameMap = {
-            'openclaw': 'openclaw-gateway',
-            'hermes': 'hermes-gateway'
-        };
-        
-        expect(serviceNameMap['openclaw']).toBe('openclaw-gateway');
-        expect(serviceNameMap['hermes']).toBe('hermes-gateway');
+        expect(serviceManager.mapServiceName('openclaw')).toBe('openclaw-gateway');
+        expect(serviceManager.mapServiceName('hermes')).toBe('hermes-gateway');
     });
 
     /**
      * Test 2: Service name mapping rejects invalid names
      */
     test('Service name mapping rejects invalid service names', () => {
-        const serviceNameMap = {
-            'openclaw': 'openclaw-gateway',
-            'hermes': 'hermes-gateway'
-        };
-        
-        expect(serviceNameMap['invalid']).toBeUndefined();
-        expect(serviceNameMap['unknown']).toBeUndefined();
+        expect(() => serviceManager.mapServiceName('invalid')).toThrow('Unknown service: invalid');
+        expect(() => serviceManager.mapServiceName('unknown')).toThrow('Unknown service: unknown');
     });
 
     /**
-     * Test 3: getStatus uses correct systemctl command
+     * Test 3: getStatus uses correct systemctl command for active service
      */
-    test('getStatus function uses systemctl --user is-active', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+    test('getStatus returns active when systemctl returns active', async () => {
+        exec.mockImplementation((command, callback) => {
+            callback(null, 'active\n', '');
+        });
         
-        // Verify correct command is used
-        expect(serviceManagerCode).toContain('systemctl --user is-active');
-        expect(serviceManagerCode).not.toContain('sudo systemctl is-active');
+        const status = await serviceManager.getStatus('openclaw');
+        expect(status).toBe('active');
+        expect(exec).toHaveBeenCalledWith(
+            'systemctl --user is-active openclaw-gateway',
+            expect.any(Function)
+        );
     });
 
     /**
-     * Test 4: controlService uses correct systemctl command
+     * Test 4: getStatus returns inactive when systemctl returns inactive
      */
-    test('controlService function uses systemctl --user [action]', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+    test('getStatus returns inactive when systemctl returns inactive', async () => {
+        exec.mockImplementation((command, callback) => {
+            const error = new Error('Command failed');
+            error.code = 3;
+            callback(error, 'inactive\n', '');
+        });
         
-        // Verify correct command format
-        expect(serviceManagerCode).toContain('systemctl --user ${action}');
-        expect(serviceManagerCode).not.toContain('sudo systemctl ${action}');
+        const status = await serviceManager.getStatus('hermes');
+        expect(status).toBe('inactive');
     });
 
     /**
-     * Test 5: Error handling for exit code 3 (inactive)
+     * Test 5: getStatus returns not-installed when service not found
      */
-    test('Error handling treats exit code 3 as inactive (not error)', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+    test('getStatus returns not-installed when service not found', async () => {
+        exec.mockImplementation((command, callback) => {
+            const error = new Error('Command failed');
+            error.code = 4;
+            callback(error, '', 'Unit openclaw-gateway.service not found.');
+        });
         
-        // Verify exit code 3 is handled
-        expect(serviceManagerCode).toContain('error.code === 3');
-        expect(serviceManagerCode).toContain('inactive');
+        const status = await serviceManager.getStatus('openclaw');
+        expect(status).toBe('not-installed');
     });
 
     /**
-     * Test 6: Error handling for exit code 4 (not found)
+     * Test 6: getStatus returns error on other failures
      */
-    test('Error handling treats exit code 4 as service not found', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+    test('getStatus returns error on other failures', async () => {
+        exec.mockImplementation((command, callback) => {
+            const error = new Error('Permission denied');
+            error.code = 1;
+            callback(error, '', 'Permission denied');
+        });
         
-        // Verify exit code 4 is handled
-        expect(serviceManagerCode).toContain('error.code === 4');
-        expect(serviceManagerCode).toContain('error');
+        const status = await serviceManager.getStatus('hermes');
+        expect(status).toBe('error');
     });
 
     /**
-     * Test 7: IPC handler returns success response
+     * Test 7: controlService uses correct systemctl command
      */
-    test('IPC handler returns success response on success', () => {
-        const mainCode = fs.readFileSync('./main.js', 'utf8');
+    test('controlService uses systemctl --user with correct service name', async () => {
+        exec.mockImplementation((command, callback) => {
+            callback(null, '', '');
+        });
         
-        // Verify success response format
-        expect(mainCode).toContain('{ success: true }');
+        await serviceManager.controlService('openclaw', 'start');
+        expect(exec).toHaveBeenCalledWith(
+            'systemctl --user start openclaw-gateway',
+            expect.any(Function)
+        );
     });
 
     /**
-     * Test 8: IPC handler returns error response on failure
+     * Test 8: controlService rejects on error
      */
-    test('IPC handler returns error response on failure', () => {
-        const mainCode = fs.readFileSync('./main.js', 'utf8');
+    test('controlService rejects promise on command failure', async () => {
+        exec.mockImplementation((command, callback) => {
+            const error = new Error('Failed to start service');
+            callback(error, '', 'Unit not found');
+        });
         
-        // Verify error response format
-        expect(mainCode).toContain('{ success: false, error:');
+        await expect(serviceManager.controlService('hermes', 'start'))
+            .rejects.toThrow('Failed to start hermes: Unit not found');
     });
 
     /**
-     * Test 9: Renderer handles error responses
+     * Test 9: getLogs uses journalctl with correct parameters
      */
-    test('Renderer handles error responses from service control', () => {
-        const rendererCode = fs.readFileSync('./renderer.js', 'utf8');
+    test('getLogs uses journalctl --user with correct service name', async () => {
+        exec.mockImplementation((command, callback) => {
+            callback(null, 'Apr 30 10:15:23 systemd[1234]: Started openclaw-gateway.service\n', '');
+        });
         
-        // Verify error handling
-        expect(rendererCode).toContain('result.error');
-        expect(rendererCode).toContain('alert');
+        const logs = await serviceManager.getLogs('openclaw', 50);
+        expect(exec).toHaveBeenCalledWith(
+            'journalctl --user -u openclaw-gateway -n 50 --no-pager -o short-precise',
+            expect.any(Function)
+        );
+        expect(logs).toContain('openclaw-gateway.service');
     });
 
     /**
-     * Test 10: Renderer displays error status
+     * Test 10: getLogs returns message when no logs found
      */
-    test('Renderer displays ERROR status when check fails', () => {
-        const rendererCode = fs.readFileSync('./renderer.js', 'utf8');
+    test('getLogs returns message when journalctl returns no output', async () => {
+        exec.mockImplementation((command, callback) => {
+            callback(null, '', '');
+        });
         
-        // Verify ERROR status display
-        expect(rendererCode).toContain('ERROR');
-        expect(rendererCode).toContain('status === \'error\'');
+        const logs = await serviceManager.getLogs('hermes', 20);
+        expect(logs).toContain('No recent logs for hermes-gateway');
     });
 
     /**
-     * Test 11: Service name mapping function exists
+     * Test 11: getLogs handles journalctl errors gracefully
      */
-    test('Service manager has mapServiceName function', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+    test('getLogs handles journalctl errors gracefully', async () => {
+        exec.mockImplementation((command, callback) => {
+            const error = new Error('No journal files found');
+            error.code = 1;
+            callback(error, '', 'No journal files found');
+        });
         
-        // Verify function exists
-        expect(serviceManagerCode).toContain('mapServiceName');
-        expect(serviceManagerCode).toContain('Unknown service');
+        const logs = await serviceManager.getLogs('openclaw', 30);
+        expect(logs).toContain('No logs found for openclaw-gateway');
     });
 
     /**
-     * Test 12: Renderer uses correct service identifiers
-     */
-    test('Renderer uses correct service identifiers in polling', () => {
-        const rendererCode = fs.readFileSync('./renderer.js', 'utf8');
-        
-        // Verify correct identifiers are used
-        expect(rendererCode).toContain('openclaw');
-        expect(rendererCode).toContain('hermes');
-    });
-
-    /**
-     * Test 13: Control function shows PENDING status
-     */
-    test('Control function shows PENDING status during execution', () => {
-        const rendererCode = fs.readFileSync('./renderer.js', 'utf8');
-        
-        // Verify PENDING status
-        expect(rendererCode).toContain('PENDING');
-    });
-
-    /**
-     * Test 14: Control function waits before updating status
-     */
-    test('Control function waits 1 second before updating status', () => {
-        const rendererCode = fs.readFileSync('./renderer.js', 'utf8');
-        
-        // Verify 1 second delay
-        expect(rendererCode).toContain('setTimeout');
-        expect(rendererCode).toContain('1000');
-    });
-
-    /**
-     * Test 15: Service manager is a singleton
+     * Test 12: Service manager is singleton
      */
     test('Service manager is exported as singleton', () => {
-        const serviceManagerCode = fs.readFileSync('./service-manager.js', 'utf8');
+        const anotherInstance = require('../service-manager');
+        expect(serviceManager).toBe(anotherInstance);
+    });
+
+    /**
+     * Test 13: Platform detection works
+     */
+    test('Service manager detects platform', () => {
+        expect(serviceManager.platform).toBeDefined();
+    });
+
+    /**
+     * Test 14: Non-linux platform returns inactive for getStatus
+     */
+    test('getStatus returns inactive on non-linux platforms', async () => {
+        // Mock platform to be non-linux
+        const originalPlatform = serviceManager.platform;
+        Object.defineProperty(serviceManager, 'platform', { value: 'darwin' });
         
-        // Verify singleton export
-        expect(serviceManagerCode).toContain('module.exports = new ServiceManager');
+        const status = await serviceManager.getStatus('openclaw');
+        expect(status).toBe('inactive');
+        
+        // Restore original platform
+        Object.defineProperty(serviceManager, 'platform', { value: originalPlatform });
+    });
+
+    /**
+     * Test 15: Error in mapServiceName returns error status
+     */
+    test('Error in mapServiceName returns error status', async () => {
+        // Mock mapServiceName to throw
+        const originalMapServiceName = serviceManager.mapServiceName;
+        serviceManager.mapServiceName = () => { throw new Error('Mapping error'); };
+        
+        const status = await serviceManager.getStatus('openclaw');
+        expect(status).toBe('error');
+        
+        // Restore original method
+        serviceManager.mapServiceName = originalMapServiceName;
     });
 });

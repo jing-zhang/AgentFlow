@@ -4,11 +4,31 @@ const os = require('os');
 class ServiceManager {
     constructor() {
         this.platform = os.platform();
-        // Service name mapping: convert identifiers to correct systemd service names
-        this.serviceNameMap = {
+        // Default service name mapping: convert identifiers to correct systemd service names
+        this.defaultServiceNameMap = {
             'openclaw': 'openclaw-gateway',
             'hermes': 'hermes-gateway'
         };
+        // Current service name mapping (can be updated from settings)
+        this.serviceNameMap = { ...this.defaultServiceNameMap };
+    }
+
+    /**
+     * Update service name mapping from settings
+     * @param {Object} newMapping - New service name mapping
+     */
+    updateServiceMapping(newMapping) {
+        if (newMapping && typeof newMapping === 'object') {
+            this.serviceNameMap = { ...this.defaultServiceNameMap, ...newMapping };
+        }
+    }
+
+    /**
+     * Get current service name mapping
+     * @returns {Object} Current service name mapping
+     */
+    getServiceMapping() {
+        return { ...this.serviceNameMap };
     }
 
     /**
