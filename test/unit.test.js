@@ -14,11 +14,21 @@ const ServiceManager = require('../service-manager');
 
 describe('Unit Tests: Service Control Functions', () => {
     let serviceManager;
+    let originalConsoleError;
     
     beforeEach(() => {
         // Get the singleton instance
         serviceManager = require('../service-manager');
         jest.clearAllMocks();
+        
+        // Mock console.error to suppress error output during tests
+        originalConsoleError = console.error;
+        console.error = jest.fn();
+    });
+    
+    afterEach(() => {
+        // Restore original console.error
+        console.error = originalConsoleError;
     });
     
     /**
