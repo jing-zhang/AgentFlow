@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Scaling Test</title>
+    <style>
+        :root {
+            --font-scale: clamp(0.8rem, 2vw, 1rem);
+            --font-scale-sm: clamp(0.7rem, 1.8vw, 0.9rem);
+            --font-scale-xs: clamp(0.6rem, 1.6vw, 0.8rem);
+            --font-scale-min: 0.6rem;
+            --spacing-base: clamp(0.5rem, 1.5vw, 1rem);
+            --spacing-sm: clamp(0.25rem, 1vw, 0.5rem);
+            --spacing-lg: clamp(1rem, 2vw, 1.5rem);
+            --status-ring-size: clamp(80px, 20vw, 100px);
+            --status-text-size: clamp(0.6rem, 1.5vw, 0.75rem);
+            --status-text-min-size: 0.5rem;
+            --action-btn-min-height: 44px;
+            --action-btn-min-width: 44px;
+        }
+        
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f1115;
+            color: #f8fafc;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-card {
+            background: rgba(30, 34, 45, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: var(--spacing-base);
+            margin-bottom: 20px;
+        }
+        
+        .test-card h2 {
+            font-size: var(--font-scale);
+            margin-bottom: var(--spacing-base);
+        }
+        
+        .status-ring {
+            width: var(--status-ring-size);
+            height: var(--status-ring-size);
+            border-radius: 50%;
+            border: 3px solid #10b981;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 10px auto;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-text {
+            font-weight: 600;
+            font-size: var(--status-text-size);
+            letter-spacing: 1px;
+            text-align: center;
+            word-wrap: break-word;
+            max-width: 90px;
+            min-font-size: var(--status-text-min-size);
+            line-height: 1.2;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: var(--spacing-sm);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #f8fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            transition: all 0.2s;
+            font-weight: 600;
+            min-height: var(--action-btn-min-height);
+            min-width: var(--action-btn-min-width);
+        }
+        
+        .test-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .compact-mode .card-actions {
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .compact-mode .action-btn {
+            width: 100%;
+            min-height: 44px;
+            padding: 0.75rem;
+        }
+        
+        .compact-mode .status-ring {
+            border-width: 2px;
+        }
+        
+        .compact-mode .status-text {
+            font-size: max(var(--status-text-size), var(--status-text-min-size));
+            padding: 0.1rem;
+        }
+        
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-btn {
+            padding: 10px 20px;
+            background: #8b5cf6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Card Content Scaling Test</h1>
+        
+        <div class="test-controls">
+            <button class="test-btn" onclick="toggleCompactMode()">Toggle Compact Mode</button>
+            <button class="test-btn" onclick="resizeWindow(370)">370px (Compact)</button>
+            <button class="test-btn" onclick="resizeWindow(500)">500px (Single Column)</button>
+            <button class="test-btn" onclick="resizeWindow(740)">740px (Grid)</button>
+        </div>
+        
+        <div class="test-card" id="testCard">
+            <h2>OpenClaw</h2>
+            <div class="status-ring">
+                <span class="status-text">ACTIVE</span>
+            </div>
+            <div class="card-actions">
+                <button class="action-btn start">Start</button>
+                <button class="action-btn stop">Stop</button>
+                <button class="action-btn restart">Restart</button>
+            </div>
+        </div>
+        
+        <div class="test-info">
+            <h3>Test Results:</h3>
+            <p id="testResults">Waiting for test...</p>
+            <ul>
+                <li><strong>Font Scaling:</strong> Font sizes should adjust proportionally based on window width</li>
+                <li><strong>Action Buttons:</strong> Should remain clickable with minimum 44px touch targets</li>
+                <li><strong>Status Indicators:</strong> Should remain clearly visible in compact mode</li>
+                <li><strong>Compact Mode:</strong> Action buttons stack vertically with enhanced padding</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        let isCompactMode = false;
+        
+        function toggleCompactMode() {
+            const card = document.getElementById('testCard');
+            isCompactMode = !isCompactMode;
+            
+            if (isCompactMode) {
+                card.classList.add('compact-mode');
+                document.getElementById('testResults').textContent = 
+                    'Compact Mode: ON - Action buttons stacked vertically, enhanced touch targets, status indicators optimized for visibility.';
+            } else {
+                card.classList.remove('compact-mode');
+                document.getElementById('testResults').textContent = 
+                    'Compact Mode: OFF - Regular layout with proportional scaling.';
+            }
+        }
+        
+        function resizeWindow(width) {
+            const card = document.getElementById('testCard');
+            card.classList.remove('compact-mode');
+            
+            // Simulate window resize by updating CSS variables
+            const scaleFactor = Math.max(0.8, Math.min(1.2, width / 370));
+            const isCompact = width <= 370;
+            const compactScaleFactor = isCompact ? 0.85 : scaleFactor;
+            
+            document.documentElement.style.setProperty('--font-scale', 
+                `clamp(${0.8 * compactScaleFactor}rem, ${2 * compactScaleFactor}vw, ${1 * compactScaleFactor}rem)`);
+            document.documentElement.style.setProperty('--font-scale-sm', 
+                `clamp(${0.7 * compactScaleFactor}rem, ${1.8 * compactScaleFactor}vw, ${0.9 * compactScaleFactor}rem)`);
+            document.documentElement.style.setProperty('--status-ring-size', 
+                `clamp(${isCompact ? 70 * compactScaleFactor : 80 * scaleFactor}px, ${isCompact ? 18 * compactScaleFactor : 20 * scaleFactor}vw, ${isCompact ? 90 * compactScaleFactor : 100 * scaleFactor}px)`);
+            document.documentElement.style.setProperty('--status-text-size', 
+                `clamp(${isCompact ? 0.55 * compactScaleFactor : 0.6 * scaleFactor}rem, ${isCompact ? 1.4 * compactScaleFactor : 1.5 * scaleFactor}vw, ${isCompact ? 0.7 * compactScaleFactor : 0.75 * scaleFactor}rem)`);
+            
+            if (isCompact) {
+                card.classList.add('compact-mode');
+            }
+            
+            document.getElementById('testResults').textContent = 
+                `Window width: ${width}px | Scale factor: ${scaleFactor.toFixed(2)} | Compact mode: ${isCompact} | Compact scale factor: ${compactScaleFactor.toFixed(2)}`;
+        }
+        
+        // Initialize
+        resizeWindow(500);
+    </script>
+</body>
+</html>
