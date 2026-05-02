@@ -8,10 +8,12 @@
 
 - **Real-time Monitoring**: Instant status updates for `openclaw-gateway` and `hermes-gateway` services.
 - **One-Click Control**: Start, Stop, and Restart agents with intuitive buttons.
+- **Agent Toggle**: Switch between OpenClaw and Hermes views with a compact segmented toggle.
+- **Compact & Responsive**: Default 370px window width with adaptive layouts — grid, single-column, and compact modes.
 - **Glassmorphism UI**: A sleek, dark-mode dashboard with smooth animations and glowing indicators.
 - **Linux Native Integration**: Communicates directly with `systemd` to manage background services.
 - **Service Logs**: View recent service logs for debugging and monitoring.
-- **Configurable Settings**: Customize service names and polling intervals.
+- **Configurable Settings**: Customize service names, polling intervals, and preferences persist across restarts.
 - **Cross-Platform Ready**: Architected to support macOS and Windows in future releases.
 
 ## 📦 Installation
@@ -169,9 +171,10 @@ See [BUILD.md](BUILD.md) for detailed build instructions.
 ## 📝 Tabs
 
 ### Overview
-- Real-time service status monitoring
-- Start, Stop, Restart controls
-- Activity monitor chart
+- Agent toggle to switch between OpenClaw and Hermes views
+- Real-time service status with animated indicator rings
+- Start, Stop, Restart controls for each agent
+- Activity monitor chart with color-coded bars
 
 ### Logs
 - View recent service logs
@@ -179,9 +182,9 @@ See [BUILD.md](BUILD.md) for detailed build instructions.
 - Separate logs for each service
 
 ### Settings
-- Configure service names
+- Configure service names for each agent
 - Adjust status poll interval (5-60 seconds)
-- Settings persist across app restarts
+- Settings and window size persist across app restarts
 
 ## 📜 License
 
