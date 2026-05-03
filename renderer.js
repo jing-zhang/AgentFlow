@@ -18,7 +18,6 @@ async function updateStatus(serviceName) {
     if (status === 'active') {
         ring.classList.add('active');
         text.innerText = 'ACTIVE';
-        text.style.fontSize = '0.75rem';
         info.innerText = 'Running smoothly | Uptime: Healthy';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
@@ -41,7 +40,6 @@ async function updateStatus(serviceName) {
     } else if (status === 'error') {
         ring.classList.add('inactive');
         text.innerText = 'ERROR';
-        text.style.fontSize = '0.75rem';
         info.innerText = 'Failed to check service status';
         // Disable buttons
         buttons.forEach(btn => btn.disabled = true);
@@ -52,7 +50,6 @@ async function updateStatus(serviceName) {
     } else {
         ring.classList.add('inactive');
         text.innerText = 'STOPPED';
-        text.style.fontSize = '0.75rem';
         info.innerText = 'Service is currently offline';
         // Enable buttons
         buttons.forEach(btn => btn.disabled = false);
@@ -109,18 +106,18 @@ function updatePollInterval(newInterval) {
     }, pollInterval);
 }
 
-// Update chart bars based on real service status
+// Update chart bars based on real CPU usage
 async function updateChart() {
     const bars = document.querySelectorAll('.bar');
-    const statuses = await Promise.all(
-        SERVICE_IDENTIFIERS.map(s => window.electronAPI.getStatus(s))
+    const cpus = await Promise.all(
+        SERVICE_IDENTIFIERS.map(s => window.electronAPI.getCPU(s))
     );
     bars.forEach((bar, i) => {
         const idx = i % SERVICE_IDENTIFIERS.length;
-        const active = statuses[idx] === 'active';
-        const height = active ? Math.floor(Math.random() * 30) + 60 : Math.floor(Math.random() * 15) + 5;
+        const cpu = cpus[idx]?.cpu ?? 0;
+        const height = Math.max(Math.round(cpu), 2);
         bar.style.height = `${height}%`;
-        bar.style.background = active
+        bar.style.background = cpu > 0
             ? `linear-gradient(to top, #00e676, #00c853)`
             : `linear-gradient(to top, #ff5252, #d32f2f)`;
     });

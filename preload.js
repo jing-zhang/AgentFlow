@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getServiceMapping: () => ipcRenderer.invoke('get-service-mapping'),
     windowControl: (action) => ipcRenderer.send('window-control', action),
     resizeWindow: (width, height) => ipcRenderer.invoke('resize-window', { width, height }),
-    getWindowPreferences: () => ipcRenderer.invoke('get-window-preferences')
+    getWindowPreferences: () => ipcRenderer.invoke('get-window-preferences'),
+    getCPU: (serviceName) => ipcRenderer.invoke('get-cpu', serviceName)
 });

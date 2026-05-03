@@ -197,3 +197,12 @@ ipcMain.handle('resize-window', async (event, { width, height }) => {
 ipcMain.handle('get-window-preferences', async () => {
     return loadWindowPreferences();
 });
+
+ipcMain.handle('get-cpu', async (event, serviceName) => {
+    try {
+        const cpu = await serviceManager.getServiceCPU(serviceName);
+        return { success: true, cpu };
+    } catch (error) {
+        return { success: false, cpu: 0 };
+    }
+});

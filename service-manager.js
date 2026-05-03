@@ -1,5 +1,6 @@
 const { exec } = require('child_process');
 const os = require('os');
+const fs = require('fs');
 
 class ServiceManager {
     constructor() {
@@ -11,6 +12,85 @@ class ServiceManager {
         };
         // Current service name mapping (can be updated from settings)
         this.serviceNameMap = { ...this.defaultServiceNameMap };
+        // Tracks previous CPU readings per service: { serviceName: { utime, stime } }
+        this._prevCPU = {};
+    }
+
+    /**
+     * Get the main PID of a systemd user service
+     * @param {string} mappedName - The systemd unit name
+     * @returns {Promise<number>} The PID, or 0 if not found
+     */
+    getPID(mappedName) {
+        return new Promise((resolve) => {
+            exec(`systemctl --user show ${mappedName} -p MainPID --value`, (error, stdout) => {
+                const pid = parseInt(stdout.trim(), 10);
+                resolve(pid && !isNaN(pid) ? pid : 0);
+            });
+        });
+    }
+
+    /**
+     * Read CPU ticks from /proc/<pid>/stat for a process
+     * @param {number} pid
+     * @returns {{ utime: number, stime: number } | null}
+     */
+    readCPUTicks(pid) {
+        try {
+            const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8');
+            // After the command name (enclosed in parentheses), fields start at index 1
+            // Field 13 (0-indexed 13) = utime, field 14 = stime
+            // Handle command names with parentheses
+            const closeParen = stat.lastIndexOf(')');
+            const afterParen = stat.slice(closeParen + 2); // Skip ") "
+            const fields = afterParen.split(' ');
+            return {
+                utime: parseInt(fields[11], 10) || 0,  // utime at index 11 after parens (field 14)
+                stime: parseInt(fields[12], 10) || 0   // stime at index 12 (field 15)
+            };
+            // Fields 14 and 15 in /proc/pid/stat (1-indexed) — after the parens they're at offsets 11 and 12
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Get current CPU usage percentage for a service
+     * Uses delta between consecutive readings to compute real CPU %
+     * Returns 0 on first call (no baseline yet) or if service is not running
+     * @param {string} serviceName - Service identifier (e.g. 'openclaw', 'hermes')
+     * @returns {Promise<number>} CPU usage percentage (0-100)
+     */
+    async getServiceCPU(serviceName) {
+        if (this.platform !== 'linux') return 0;
+
+        try {
+            const mappedName = this.mapServiceName(serviceName);
+            const pid = await this.getPID(mappedName);
+            if (!pid) return 0;
+
+            const ticks = this.readCPUTicks(pid);
+            if (!ticks) return 0;
+
+            const prev = this._prevCPU[serviceName];
+            this._prevCPU[serviceName] = ticks;
+
+            if (!prev) return 0; // First reading, no baseline
+
+            const deltaUtime = ticks.utime - prev.utime;
+            const deltaStime = ticks.stime - prev.stime;
+
+            // Guard against counter wraparound or stale readings
+            if (deltaUtime < 0 || deltaStime < 0) return 0;
+
+            const totalTicks = deltaUtime + deltaStime;
+            // CLK_TCK is typically 100 on Linux
+            const cpuPercent = (totalTicks / 100) * 100; // Over ~3s polling this gives a sane %
+
+            return Math.min(Math.round(cpuPercent), 100);
+        } catch {
+            return 0;
+        }
     }
 
     /**
